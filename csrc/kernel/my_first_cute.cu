@@ -4,21 +4,12 @@
 #include <cute/atom/mma_atom.hpp>
 #include <cute/algorithm/gemm.hpp>
 #include <cute/util/print.hpp>
+#include <common/cuda_check.h>
 
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
 #include <vector>
-
-#define CHECK_CUDA(call)                                                       \
-  do {                                                                         \
-    cudaError_t status = (call);                                               \
-    if (status != cudaSuccess) {                                               \
-      std::cerr << "CUDA error: " << cudaGetErrorString(status)                \
-                << " at " << __FILE__ << ":" << __LINE__ << "\n";            \
-      std::exit(EXIT_FAILURE);                                                 \
-    }                                                                          \
-  } while (0)
 
 using namespace cute;
 
@@ -112,15 +103,15 @@ int main() {
     float* dA;
     float* dB;
     float* dC;
-    CHECK_CUDA(cudaMalloc(&dA, ElementA * sizeof(float)));
-    CHECK_CUDA(cudaMalloc(&dB, ElementB * sizeof(float)));
-    CHECK_CUDA(cudaMalloc(&dC, ElementC * sizeof(float)));
+    MYCUTE_CHECK_CUDA(cudaMalloc(&dA, ElementA * sizeof(float)));
+    MYCUTE_CHECK_CUDA(cudaMalloc(&dB, ElementB * sizeof(float)));
+    MYCUTE_CHECK_CUDA(cudaMalloc(&dC, ElementC * sizeof(float)));
 
-    CHECK_CUDA(cudaMemcpy(dA, hA.data(), ElementA * sizeof(float),
+    MYCUTE_CHECK_CUDA(cudaMemcpy(dA, hA.data(), ElementA * sizeof(float),
                         cudaMemcpyHostToDevice));
-    CHECK_CUDA(cudaMemcpy(dB, hB.data(), ElementB * sizeof(float),
+    MYCUTE_CHECK_CUDA(cudaMemcpy(dB, hB.data(), ElementB * sizeof(float),
                         cudaMemcpyHostToDevice));
-    CHECK_CUDA(cudaMemset(dC, 0, ElementC * sizeof(float)));
+    MYCUTE_CHECK_CUDA(cudaMemset(dC, 0, ElementC * sizeof(float)));
 
 
     dim3 block(kBlockM * kBlockN);
@@ -128,10 +119,10 @@ int main() {
     my_cute_gemm<<<grid, block>>>(dA, dB, dC);
 
 
-    CHECK_CUDA(cudaGetLastError());
-    CHECK_CUDA(cudaDeviceSynchronize());
+    MYCUTE_CHECK_CUDA(cudaGetLastError());
+    MYCUTE_CHECK_CUDA(cudaDeviceSynchronize());
 
-    CHECK_CUDA(cudaMemcpy(hC.data(), dC, ElementC * sizeof(float),
+    MYCUTE_CHECK_CUDA(cudaMemcpy(hC.data(), dC, ElementC * sizeof(float),
                             cudaMemcpyDeviceToHost));
 
     int errors = 0;
@@ -169,9 +160,9 @@ int main() {
                 << "\n";
     }
 
-    CHECK_CUDA(cudaFree(dA));
-    CHECK_CUDA(cudaFree(dB));
-    CHECK_CUDA(cudaFree(dC));
+    MYCUTE_CHECK_CUDA(cudaFree(dA));
+    MYCUTE_CHECK_CUDA(cudaFree(dB));
+    MYCUTE_CHECK_CUDA(cudaFree(dC));
     return errors == 0 ? 0 : 1;
 
 }

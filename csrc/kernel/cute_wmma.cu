@@ -7,21 +7,13 @@
 #include <cute/arch/mma_sm80.hpp>
 #include <cute/atom/mma_traits_sm80.hpp>
 #include <cute/numeric/numeric_types.hpp>
+#include <common/cuda_check.h>
 
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
 #include <vector>
 
-#define CHECK_CUDA(call)                                                       \
-  do {                                                                         \
-    cudaError_t status = (call);                                               \
-    if (status != cudaSuccess) {                                               \
-      std::cerr << "CUDA error: " << cudaGetErrorString(status)                \
-                << " at " << __FILE__ << ":" << __LINE__ << "\n";            \
-      std::exit(EXIT_FAILURE);                                                 \
-    }                                                                          \
-  } while (0)
 
 using namespace cute;
 
